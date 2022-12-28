@@ -3,6 +3,7 @@ import curses
 import asyncio
 import logging
 import random
+from curses_tools import draw_frame
 
 
 TIC_TIMEOUT = 0.1
@@ -26,7 +27,7 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
     symbol = '-' if columns_speed else '|'
 
     rows, columns = canvas.getmaxyx()
-    max_row, max_column = rows - 2, columns - 2
+    max_row, max_column = rows, columns
 
     curses.beep()
 
@@ -38,7 +39,17 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
         column += columns_speed
 
 
-async def sleep(canvas, tics=1):
+async def animate_spaceship(canvas, row, column):
+    while True:
+        draw_frame(canvas, row, column, rocket_frame_1)
+        await sleep(2)
+        draw_frame(canvas, row, column, rocket_frame_1, negative=True)
+        draw_frame(canvas, row, column, rocket_frame_2)
+        await sleep(2)
+        draw_frame(canvas, row, column, rocket_frame_2, negative=True)
+
+
+async def sleep(tics=1):
     for _ in range(int(tics)):
         await asyncio.sleep(0)
 
@@ -48,19 +59,19 @@ async def blink(canvas, row, column, symbol='*'):
     while True:
         if state == 1:
             canvas.addstr(row, column, symbol, curses.A_DIM)
-            await sleep(canvas, 20)
+            await sleep(20)
             state = 2
         if state == 2:
             canvas.addstr(row, column, symbol)
-            await sleep(canvas, 3)
+            await sleep(3)
             state = 3
         if state == 3:
             canvas.addstr(row, column, symbol, curses.A_BOLD)
-            await sleep(canvas, 5)
+            await sleep(5)
             state = 4
         if state == 4:
             canvas.addstr(row, column, symbol)
-            await sleep(canvas, 3)
+            await sleep(3)
             state = 1
 
 
@@ -69,12 +80,15 @@ def draw(canvas, stars_qty=200):
     canvas.border()
     curses.curs_set(False)
     max_y, max_x = canvas.getmaxyx()
+    median_y = int(max_y / 2)
+    median_x = int(max_x / 2)
     coroutines = [blink(
-                        canvas, random.randint(1, max_y-2),
-                        random.randint(1, max_x-2),
+                        canvas, random.randint(1, max_y - 2),
+                        random.randint(1, max_x - 2),
                         symbol=random.choice(['*', ':', '+', '.'])
                         ) for _ in range(stars_qty)]
-    coroutines.append(fire(canvas, max_y/2, max_x/2, -1))
+    coroutines.append(fire(canvas, median_y, median_x, -1))
+    coroutines.append(animate_spaceship(canvas, median_y + 1, median_x - 2))
     while True:
         try:
             for coroutine in coroutines.copy():
@@ -91,5 +105,9 @@ if __name__ == '__main__':
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
             level=logging.INFO
     )
+    with open('frames/rocket_frame_1.txt', 'r') as f:
+        rocket_frame_1 = f.read()
+    with open('frames/rocket_frame_2.txt', 'r') as f:
+        rocket_frame_2 = f.read()
     curses.update_lines_cols()
     curses.wrapper(draw)
