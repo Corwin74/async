@@ -3,7 +3,7 @@ import curses
 import asyncio
 import logging
 import random
-from curses_tools import draw_frame, read_controls
+from curses_tools import draw_frame, read_controls, get_frame_size
 
 
 TIC_TIMEOUT = 0.1
@@ -75,34 +75,55 @@ async def blink(canvas, row, column, symbol='*'):
 
 
 def game_engine(canvas, stars_qty=200):
-    
+
     canvas.border()
     canvas.nodelay(True)
     curses.curs_set(False)
     max_y, max_x = canvas.getmaxyx()
     median_y = int(max_y / 2)
     median_x = int(max_x / 2)
-    x = median_x
-    y = median_y
+    columns = median_x
+    rows = median_y
+    spaceship_height, spaceship_width = get_frame_size(rocket_frame_1)
     coroutines = [blink(
                         canvas, random.randint(1, max_y - 2),
                         random.randint(1, max_x - 2),
                         symbol=random.choice(['*', ':', '+', '.'])
                         ) for _ in range(stars_qty)]
     coroutines.append(fire(canvas, median_y - 1, median_x + 2, -1))
-    coroutines.append(animate_spaceship(canvas, y, x))
+    coroutines.append(animate_spaceship(canvas, rows, columns))
     while True:
         try:
             for coroutine in coroutines.copy():
                 coroutine.send(None)
             canvas.refresh()
+
             rows_direction, columns_direction, space_pressed = read_controls(canvas)
-            x += columns_direction
-            y += rows_direction
+            if columns_direction > 0:
+                if columns + columns_direction > max_x - spaceship_width - 1:
+                    columns = max_x - spaceship_width - 1
+                else:
+                    columns += columns_direction
+            if columns_direction < 0:
+                if columns + columns_direction < 1:
+                    columns = 1
+                else:
+                    columns += columns_direction
+            if rows_direction > 0:
+                if rows + rows_direction > max_y - spaceship_height - 1:
+                    rows = max_y - spaceship_height - 1
+                else:
+                    rows += rows_direction
+            if rows_direction < 0:
+                if rows + rows_direction < 1:
+                    rows = 1
+                else:
+                    rows += rows_direction
+
             time.sleep(TIC_TIMEOUT)
         except StopIteration:
             coroutines.remove(coroutine)
-            coroutines.append(animate_spaceship(canvas, y, x))
+            coroutines.append(animate_spaceship(canvas, rows, columns))
 
 
 if __name__ == '__main__':
@@ -117,4 +138,3 @@ if __name__ == '__main__':
         rocket_frame_2 = f.read()
     curses.update_lines_cols()
     curses.wrapper(game_engine)
-
