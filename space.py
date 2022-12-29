@@ -89,8 +89,8 @@ def game_engine(canvas, stars_qty=200):
                         random.randint(1, max_x - 2),
                         symbol=random.choice(['*', ':', '+', '.'])
                         ) for _ in range(stars_qty)]
-    coroutines.append(fire(canvas, median_y, median_x, -1))
-    coroutines.append(animate_spaceship(canvas, median_y + 1, median_x - 2))
+    coroutines.append(fire(canvas, median_y - 1, median_x + 2, -1))
+    coroutines.append(animate_spaceship(canvas, y, x))
     while True:
         try:
             for coroutine in coroutines.copy():
