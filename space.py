@@ -9,7 +9,8 @@ from curses_tools import draw_frame, read_controls, get_frame_size
 TIC_TIMEOUT = 0.1
 
 
-async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0):
+async def fire(canvas, start_row, start_column,
+               rows_speed=-0.3, columns_speed=0):
     """Display animation of gun shot, direction and speed can be specified."""
 
     row, column = start_row, start_column
@@ -82,48 +83,49 @@ def game_engine(canvas, stars_qty=200):
     max_y, max_x = canvas.getmaxyx()
     median_y = int(max_y / 2)
     median_x = int(max_x / 2)
-    columns = median_x
-    rows = median_y
-    spaceship_height, spaceship_width = get_frame_size(rocket_frame_1)
+    column = median_x
+    row = median_y
+    rocket_height, rocket_width = get_frame_size(rocket_frame_1)
     coroutines = [blink(
                         canvas, random.randint(1, max_y - 2),
                         random.randint(1, max_x - 2),
                         symbol=random.choice(['*', ':', '+', '.'])
                         ) for _ in range(stars_qty)]
     coroutines.append(fire(canvas, median_y - 1, median_x + 2, -1))
-    coroutines.append(animate_spaceship(canvas, rows, columns))
+    coroutines.append(animate_spaceship(canvas, row, column))
     while True:
         try:
             for coroutine in coroutines.copy():
                 coroutine.send(None)
             canvas.refresh()
 
-            rows_direction, columns_direction, space_pressed = read_controls(canvas)
+            rows_direction, columns_direction, space_pressed =\
+                read_controls(canvas)
             if columns_direction > 0:
-                if columns + columns_direction > max_x - spaceship_width - 1:
-                    columns = max_x - spaceship_width - 1
+                if column + columns_direction > max_x - rocket_width - 1:
+                    column = max_x - rocket_width - 1
                 else:
-                    columns += columns_direction
+                    column += columns_direction
             if columns_direction < 0:
-                if columns + columns_direction < 1:
-                    columns = 1
+                if column + columns_direction < 1:
+                    column = 1
                 else:
-                    columns += columns_direction
+                    column += columns_direction
             if rows_direction > 0:
-                if rows + rows_direction > max_y - spaceship_height - 1:
-                    rows = max_y - spaceship_height - 1
+                if row + rows_direction > max_y - rocket_height - 1:
+                    row = max_y - rocket_height - 1
                 else:
-                    rows += rows_direction
+                    row += rows_direction
             if rows_direction < 0:
-                if rows + rows_direction < 1:
-                    rows = 1
+                if row + rows_direction < 1:
+                    row = 1
                 else:
-                    rows += rows_direction
+                    row += rows_direction
 
             time.sleep(TIC_TIMEOUT)
         except StopIteration:
             coroutines.remove(coroutine)
-            coroutines.append(animate_spaceship(canvas, rows, columns))
+            coroutines.append(animate_spaceship(canvas, row, column))
 
 
 if __name__ == '__main__':
@@ -132,9 +134,9 @@ if __name__ == '__main__':
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
             level=logging.INFO
     )
-    with open('frames/rocket_frame_1.txt', 'r') as f:
+    with open('frames/rocket_frame_1.txt', 'r', encoding='UTF8') as f:
         rocket_frame_1 = f.read()
-    with open('frames/rocket_frame_2.txt', 'r') as f:
+    with open('frames/rocket_frame_2.txt', 'r', encoding='UTF8') as f:
         rocket_frame_2 = f.read()
     curses.update_lines_cols()
     curses.wrapper(game_engine)
