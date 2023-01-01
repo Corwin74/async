@@ -86,14 +86,18 @@ def start_game_engine(canvas, rocket_frames, stars_qty=200):
     canvas.nodelay(True)
     curses.curs_set(False)
     max_y, max_x = canvas.getmaxyx()
+    # Function return a tuple (y, x) of the height and width of the window.
+    # Not a maximum of coordinates. So adjust it.
+    max_x -= 1
+    max_y -= 1
     median_y = int(max_y / 2)
     median_x = int(max_x / 2)
     column = median_x
     row = median_y
     rocket_height, rocket_width = get_frame_size(rocket_frames[0])
     coroutines = [blink(
-                        canvas, random.randint(1, max_y - 2),
-                        random.randint(1, max_x - 2),
+                        canvas, random.randint(1, max_y - 1),
+                        random.randint(1, max_x - 1),
                         random.randint(1, 4),
                         symbol=random.choice(['*', ':', '+', '.'])
                         ) for _ in range(stars_qty)]
@@ -108,8 +112,8 @@ def start_game_engine(canvas, rocket_frames, stars_qty=200):
             rows_direction, columns_direction, space_pressed =\
                 read_controls(canvas)
             if columns_direction > 0:
-                if column + columns_direction > max_x - rocket_width - 1:
-                    column = max_x - rocket_width - 1
+                if column + columns_direction > max_x - rocket_width:
+                    column = max_x - rocket_width
                 else:
                     column += columns_direction
             if columns_direction < 0:
@@ -118,8 +122,8 @@ def start_game_engine(canvas, rocket_frames, stars_qty=200):
                 else:
                     column += columns_direction
             if rows_direction > 0:
-                if row + rows_direction > max_y - rocket_height - 1:
-                    row = max_y - rocket_height - 1
+                if row + rows_direction > max_y - rocket_height:
+                    row = max_y - rocket_height
                 else:
                     row += rows_direction
             if rows_direction < 0:
