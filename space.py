@@ -40,13 +40,13 @@ async def fire(canvas, start_row, start_column,
         column += columns_speed
 
 
-async def animate_spaceship(canvas, row, column):
-    draw_frame(canvas, row, column, rocket_frame_1)
+async def animate_spaceship(canvas, row, column, rocket_frames):
+    draw_frame(canvas, row, column, rocket_frames[0])
     await sleep(1)
-    draw_frame(canvas, row, column, rocket_frame_1, negative=True)
-    draw_frame(canvas, row, column, rocket_frame_2)
+    draw_frame(canvas, row, column, rocket_frames[0], negative=True)
+    draw_frame(canvas, row, column, rocket_frames[1])
     await sleep(1)
-    draw_frame(canvas, row, column, rocket_frame_2, negative=True)
+    draw_frame(canvas, row, column, rocket_frames[1], negative=True)
 
 
 async def sleep(tics=1):
@@ -75,8 +75,7 @@ async def blink(canvas, row, column, symbol='*'):
             state = 1
 
 
-def game_engine(canvas, stars_qty=200):
-
+def game_engine(canvas, rocket_frames, stars_qty=200):
     canvas.border()
     canvas.nodelay(True)
     curses.curs_set(False)
@@ -85,14 +84,14 @@ def game_engine(canvas, stars_qty=200):
     median_x = int(max_x / 2)
     column = median_x
     row = median_y
-    rocket_height, rocket_width = get_frame_size(rocket_frame_1)
+    rocket_height, rocket_width = get_frame_size(rocket_frames[0])
     coroutines = [blink(
                         canvas, random.randint(1, max_y - 2),
                         random.randint(1, max_x - 2),
                         symbol=random.choice(['*', ':', '+', '.'])
                         ) for _ in range(stars_qty)]
     coroutines.append(fire(canvas, median_y - 1, median_x + 2, -1))
-    coroutines.append(animate_spaceship(canvas, row, column))
+    coroutines.append(animate_spaceship(canvas, row, column, rocket_frames))
     while True:
         try:
             for coroutine in coroutines.copy():
@@ -125,10 +124,10 @@ def game_engine(canvas, stars_qty=200):
             time.sleep(TIC_TIMEOUT)
         except StopIteration:
             coroutines.remove(coroutine)
-            coroutines.append(animate_spaceship(canvas, row, column))
+            coroutines.append(animate_spaceship(canvas, row, column, rocket_frames))
 
 
-if __name__ == '__main__':
+def main():
     logger = logging.getLogger(__file__)
     logging.basicConfig(
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -138,5 +137,10 @@ if __name__ == '__main__':
         rocket_frame_1 = f.read()
     with open('frames/rocket_frame_2.txt', 'r', encoding='UTF8') as f:
         rocket_frame_2 = f.read()
+    rocket_frames = rocket_frame_1, rocket_frame_2
     curses.update_lines_cols()
-    curses.wrapper(game_engine)
+    curses.wrapper(game_engine, rocket_frames)
+
+
+if __name__ == '__main__':
+    main()
