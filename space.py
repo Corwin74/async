@@ -3,6 +3,8 @@ import curses
 import asyncio
 import logging
 import random
+from itertools import cycle
+import os
 from curses_tools import draw_frame, read_controls, get_frame_size
 
 
@@ -40,13 +42,22 @@ async def fire(canvas, start_row, start_column,
         column += columns_speed
 
 
-async def animate_spaceship(canvas, row, column, rocket_frames):
-    draw_frame(canvas, row, column, rocket_frames[0])
-    await sleep(1)
-    draw_frame(canvas, row, column, rocket_frames[0], negative=True)
-    draw_frame(canvas, row, column, rocket_frames[1])
-    await sleep(1)
-    draw_frame(canvas, row, column, rocket_frames[1], negative=True)
+async def animate_spaceship(canvas, row, column, rocket_frames, max_x, max_y):
+    rocket_height, rocket_width = get_frame_size(rocket_frames[0])
+    for frame in cycle([0, 1]):
+        rows_direction, columns_direction, space_pressed =\
+            read_controls(canvas)
+        if columns_direction > 0:
+            column = min(max_x - rocket_width, column + columns_direction)
+        if columns_direction < 0:
+            column = max(1, column + columns_direction)
+        if rows_direction > 0:
+            row = min(max_y - rocket_height, row + rows_direction)
+        if rows_direction < 0:
+            row = max(1, row + rows_direction)
+        draw_frame(canvas, row, column, rocket_frames[frame])
+        await sleep(1)
+        draw_frame(canvas, row, column, rocket_frames[frame], negative=True)
 
 
 async def sleep(tics=1):
@@ -81,7 +92,7 @@ async def blink(
             state = 1
 
 
-def start_game_engine(canvas, rocket_frames, stars_qty=200):
+def start_game_engine(canvas, rocket_frames, logger, stars_qty=200):
     canvas.border()
     canvas.nodelay(True)
     curses.curs_set(False)
@@ -94,7 +105,6 @@ def start_game_engine(canvas, rocket_frames, stars_qty=200):
     median_x = int(max_x / 2)
     column = median_x
     row = median_y
-    rocket_height, rocket_width = get_frame_size(rocket_frames[0])
     coroutines = [
         blink(
             canvas, random.randint(1, max_y - 1),
@@ -105,55 +115,39 @@ def start_game_engine(canvas, rocket_frames, stars_qty=200):
         for _ in range(stars_qty)
     ]
     coroutines.append(fire(canvas, median_y - 1, median_x + 2, -1))
-    coroutines.append(animate_spaceship(canvas, row, column, rocket_frames))
+    coroutines.append(
+        animate_spaceship(canvas, row, column, rocket_frames, max_x, max_y)
+    )
     while True:
-        try:
-            for coroutine in coroutines.copy():
+        for coroutine in coroutines.copy():
+            try:
                 coroutine.send(None)
-            canvas.refresh()
+            except StopIteration:
+                logger.debug(f'StopIteration: {coroutine}')
+                coroutines.remove(coroutine)
+        canvas.refresh()
+        time.sleep(TIC_TIMEOUT)
 
-            rows_direction, columns_direction, space_pressed =\
-                read_controls(canvas)
-            if columns_direction > 0:
-                if column + columns_direction > max_x - rocket_width:
-                    column = max_x - rocket_width
-                else:
-                    column += columns_direction
-            if columns_direction < 0:
-                if column + columns_direction < 1:
-                    column = 1
-                else:
-                    column += columns_direction
-            if rows_direction > 0:
-                if row + rows_direction > max_y - rocket_height:
-                    row = max_y - rocket_height
-                else:
-                    row += rows_direction
-            if rows_direction < 0:
-                if row + rows_direction < 1:
-                    row = 1
-                else:
-                    row += rows_direction
 
-            time.sleep(TIC_TIMEOUT)
-        except StopIteration:
-            coroutines.remove(coroutine)
-            coroutines.append(animate_spaceship(canvas, row, column, rocket_frames))
+def load_frames_data(path):
+    files = os.listdir(path=path)
+    rocket_frames = []
+    for file in files:
+        with open(f'{path}{file}', "r", encoding='utf-8') as f:
+            rocket_frames.append(f.read())
+    return rocket_frames
 
 
 def main():
     logger = logging.getLogger(__file__)
     logging.basicConfig(
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            level=logging.INFO
+            level=logging.INFO,
+            filename='space.log',
     )
-    with open('frames/rocket_frame_1.txt', 'r', encoding='UTF8') as f:
-        rocket_frame_1 = f.read()
-    with open('frames/rocket_frame_2.txt', 'r', encoding='UTF8') as f:
-        rocket_frame_2 = f.read()
-    rocket_frames = rocket_frame_1, rocket_frame_2
+    rocket_frames = load_frames_data('frames/')
     curses.update_lines_cols()
-    curses.wrapper(start_game_engine, rocket_frames)
+    curses.wrapper(start_game_engine, rocket_frames, logger)
 
 
 if __name__ == '__main__':
