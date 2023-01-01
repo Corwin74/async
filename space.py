@@ -81,7 +81,7 @@ async def blink(
             state = 1
 
 
-def game_engine(canvas, rocket_frames, stars_qty=200):
+def start_game_engine(canvas, rocket_frames, stars_qty=200):
     canvas.border()
     canvas.nodelay(True)
     curses.curs_set(False)
@@ -146,7 +146,7 @@ def main():
         rocket_frame_2 = f.read()
     rocket_frames = rocket_frame_1, rocket_frame_2
     curses.update_lines_cols()
-    curses.wrapper(game_engine, rocket_frames)
+    curses.wrapper(start_game_engine, rocket_frames)
 
 
 if __name__ == '__main__':
