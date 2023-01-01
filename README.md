@@ -1,8 +1,8 @@
 ## Игра "Космический полёт"
 ![Image animation](https://github.com/Corwin74/async/blob/main/images/anim.gif)
 ## Запуск программы
-Для запуска требуется Python3, версии не ниже 3.7  
-Запуск:
+Понадобится Python3, версии не ниже 3.7  
+Перейдите в каталог с проектом и выполните:
 ```sh
 python3 space.py
 ```
