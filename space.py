@@ -54,8 +54,14 @@ async def sleep(tics=1):
         await asyncio.sleep(0)
 
 
-async def blink(canvas, row, column, symbol='*'):
-    state = random.randint(1, 4)
+async def blink(
+                canvas,
+                row,
+                column,
+                start_state,
+                symbol='*'
+                ):
+    state = start_state
     while True:
         if state == 1:
             canvas.addstr(row, column, symbol, curses.A_DIM)
@@ -88,6 +94,7 @@ def game_engine(canvas, rocket_frames, stars_qty=200):
     coroutines = [blink(
                         canvas, random.randint(1, max_y - 2),
                         random.randint(1, max_x - 2),
+                        random.randint(1, 4),
                         symbol=random.choice(['*', ':', '+', '.'])
                         ) for _ in range(stars_qty)]
     coroutines.append(fire(canvas, median_y - 1, median_x + 2, -1))
