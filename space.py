@@ -95,12 +95,15 @@ def start_game_engine(canvas, rocket_frames, stars_qty=200):
     column = median_x
     row = median_y
     rocket_height, rocket_width = get_frame_size(rocket_frames[0])
-    coroutines = [blink(
-                        canvas, random.randint(1, max_y - 1),
-                        random.randint(1, max_x - 1),
-                        random.randint(1, 4),
-                        symbol=random.choice(['*', ':', '+', '.'])
-                        ) for _ in range(stars_qty)]
+    coroutines = [
+        blink(
+            canvas, random.randint(1, max_y - 1),
+            random.randint(1, max_x - 1),
+            random.randint(1, 4),
+            symbol=random.choice(['*', ':', '+', '.'])
+        )
+        for _ in range(stars_qty)
+    ]
     coroutines.append(fire(canvas, median_y - 1, median_x + 2, -1))
     coroutines.append(animate_spaceship(canvas, row, column, rocket_frames))
     while True:
