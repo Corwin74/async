@@ -50,7 +50,7 @@ async def animate_spaceship(canvas, row, column, rocket_frames):
 
 
 async def sleep(tics=1):
-    for _ in range(int(tics)):
+    for _ in range(tics):
         await asyncio.sleep(0)
 
 
