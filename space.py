@@ -6,9 +6,31 @@ import random
 from itertools import cycle
 import os
 from curses_tools import draw_frame, read_controls, get_frame_size
+from space_garbage import fly_garbage
 
 
 TIC_TIMEOUT = 0.1
+coroutines = []
+
+
+async def fill_orbit_with_garbage(canvas, frames):
+    global coroutines
+
+    garbage_keys = list(frames.keys())
+    garbage_keys.remove('rocket_frame_1')
+    garbage_keys.remove('rocket_frame_2')
+    max_y, max_x = canvas.getmaxyx()
+    while True:
+        garbage = random.choice(garbage_keys)
+        _, garbage_width = get_frame_size(frames[garbage])
+        coroutines.append(
+            fly_garbage(
+                canvas,
+                random.randint(1, max_x - garbage_width - 1),
+                frames[garbage]
+            )
+        )
+        await sleep(10)
 
 
 async def fire(canvas, start_row, start_column,
@@ -93,6 +115,8 @@ async def blink(
 
 
 def start_game_engine(canvas, frames, logger, stars_qty=200):
+    global coroutines
+
     canvas.border()
     canvas.nodelay(True)
     curses.curs_set(False)
@@ -105,16 +129,17 @@ def start_game_engine(canvas, frames, logger, stars_qty=200):
     median_x = int(max_x / 2)
     column = median_x
     row = median_y
-    coroutines = [
-        blink(
-            canvas, random.randint(1, max_y - 1),
-            random.randint(1, max_x - 1),
-            random.randint(1, 4),
-            symbol=random.choice(['*', ':', '+', '.'])
+    for _ in range(stars_qty):
+        coroutines.append(
+            blink(
+                canvas, random.randint(1, max_y - 1),
+                random.randint(1, max_x - 1),
+                random.randint(1, 4),
+                symbol=random.choice(['*', ':', '+', '.'])
+            )
         )
-        for _ in range(stars_qty)
-    ]
     coroutines.append(fire(canvas, median_y - 1, median_x + 2, -1))
+    coroutines.append(fill_orbit_with_garbage(canvas, frames))
     coroutines.append(
         animate_spaceship(canvas, row, column, frames, max_x, max_y)
     )
@@ -125,6 +150,7 @@ def start_game_engine(canvas, frames, logger, stars_qty=200):
             except StopIteration:
                 logger.debug(f'StopIteration: {coroutine}')
                 coroutines.remove(coroutine)
+        canvas.border()
         canvas.refresh()
         time.sleep(TIC_TIMEOUT)
 
