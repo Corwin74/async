@@ -7,6 +7,7 @@ from itertools import cycle
 import os
 from curses_tools import draw_frame, read_controls, get_frame_size
 from space_garbage import fly_garbage
+from physics import update_speed
 
 
 TIC_TIMEOUT = 0.1
@@ -65,18 +66,34 @@ async def fire(canvas, start_row, start_column,
 
 
 async def animate_spaceship(canvas, row, column, frames, max_x, max_y):
+    row_speed = column_speed = 0
+
     rocket_height, rocket_width = get_frame_size(frames['rocket_frame_1'])
     for frame in cycle(['rocket_frame_1', 'rocket_frame_2']):
         rows_direction, columns_direction, space_pressed =\
             read_controls(canvas)
         if columns_direction > 0:
-            column = min(max_x - rocket_width, column + columns_direction)
+            row_speed, column_speed = \
+                update_speed(row_speed, column_speed, 0, 1)
         if columns_direction < 0:
-            column = max(1, column + columns_direction)
+            row_speed, column_speed = \
+                update_speed(row_speed, column_speed, 0, -1)
         if rows_direction > 0:
-            row = min(max_y - rocket_height, row + rows_direction)
+            row_speed, column_speed = \
+                update_speed(row_speed, column_speed, 1, 0)
         if rows_direction < 0:
-            row = max(1, row + rows_direction)
+            row_speed, column_speed = \
+                update_speed(row_speed, column_speed, -1, 0)
+        if rows_direction == 0 and columns_direction == 0:
+            row_speed, column_speed = \
+                update_speed(row_speed, column_speed, 0, 0)
+
+        row, column = row + row_speed, column + column_speed
+        column = min(max_x - rocket_width, column)
+        column = max(1, column)
+        row = min(max_y - rocket_height, row)
+        row = max(1, row)
+
         draw_frame(canvas, row, column, frames[frame])
         await sleep(1)
         draw_frame(canvas, row, column, frames[frame], negative=True)
