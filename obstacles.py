@@ -11,6 +11,15 @@ class Obstacle:
         self.columns_size = columns_size
         self.uid = uid
         self.has_a_hit = False
+        self.collision_row = None
+        self.collision_column = None
+
+    def set_collision_coordinates(self, row, column):
+        self.collision_row = row
+        self.collision_column = column
+
+    def get_collision_coordinates(self):
+        return self.collision_row, self.collision_column
 
     def get_has_a_hit(self):
         return self.has_a_hit

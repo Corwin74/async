@@ -6,9 +6,11 @@ import random
 import uuid
 from itertools import cycle
 import os
-from curses_tools import draw_frame, read_controls, get_frame_size
+from curses_tools import draw_frame, read_controls, get_frame_size, sleep
 from obstacles import show_obstacles, Obstacle
 from physics import update_speed
+from explosion import explode
+from game_over import show_end_title
 
 
 TIC_TIMEOUT = 0.1
@@ -20,6 +22,7 @@ async def fly_garbage(canvas, column, garbage_frame, garbage_uid, speed=0.5):
     """Animate garbage, flying from top to bottom. \
         Сolumn position will stay same, as specified on start."""
     global obstacles
+    global coroutines
 
     rows_number, columns_number = canvas.getmaxyx()
 
@@ -30,6 +33,9 @@ async def fly_garbage(canvas, column, garbage_frame, garbage_uid, speed=0.5):
 
     while row < rows_number:
         if obstacles[garbage_uid].get_has_a_hit():
+            collision_row, collision_column = \
+                obstacles[garbage_uid].get_collision_coordinates()
+            coroutines.append(explode(canvas, collision_row, collision_column))
             del obstacles[garbage_uid]
             return
         draw_frame(canvas, row, column, garbage_frame)
@@ -97,6 +103,7 @@ async def fire(canvas, start_row, start_column,
         for obstacle in list(obstacles.values()):
             if obstacle.has_collision(row, column):
                 obstacle.set_has_a_hit()
+                obstacle.set_collision_coordinates(row, column)
                 return
 
 
@@ -133,14 +140,16 @@ async def animate_spaceship(canvas, row, column, frames, max_x, max_y):
         row = min(max_y - rocket_height, row)
         row = max(1, row)
 
+        for obstacle in list(obstacles.values()):
+            if obstacle.has_collision(row, column):
+                obstacle.set_has_a_hit()
+                obstacle.set_collision_coordinates(row, column)
+                coroutines.append(show_end_title(canvas))
+                return
+
         draw_frame(canvas, row, column, frames[frame])
         await sleep(1)
         draw_frame(canvas, row, column, frames[frame], negative=True)
-
-
-async def sleep(tics=1):
-    for _ in range(tics):
-        await asyncio.sleep(0)
 
 
 async def blink(
@@ -206,7 +215,6 @@ def start_game_engine(canvas, frames, logger, stars_qty=200):
             try:
                 coroutine.send(None)
             except StopIteration:
-                logger.debug(f'StopIteration: {coroutine}')
                 coroutines.remove(coroutine)
         canvas.border()
         canvas.refresh()
