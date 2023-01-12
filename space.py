@@ -29,6 +29,9 @@ async def fly_garbage(canvas, column, garbage_frame, garbage_uid, speed=0.5):
     row = 0
 
     while row < rows_number:
+        if obstacles[garbage_uid].get_has_a_hit():
+            del obstacles[garbage_uid]
+            return
         draw_frame(canvas, row, column, garbage_frame)
         await asyncio.sleep(0)
         draw_frame(canvas, row, column, garbage_frame, negative=True)
@@ -39,6 +42,7 @@ async def fly_garbage(canvas, column, garbage_frame, garbage_uid, speed=0.5):
 
 async def fill_orbit_with_garbage(canvas, frames):
     global coroutines
+    global obstacles
 
     garbage_keys = list(frames.keys())
     garbage_keys.remove('rocket_frame_1')
@@ -90,6 +94,10 @@ async def fire(canvas, start_row, start_column,
         canvas.addstr(round(row), round(column), ' ')
         row += rows_speed
         column += columns_speed
+        for obstacle in list(obstacles.values()):
+            if obstacle.has_collision(row, column):
+                obstacle.set_has_a_hit()
+                return
 
 
 async def animate_spaceship(canvas, row, column, frames, max_x, max_y):

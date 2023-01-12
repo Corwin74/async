@@ -10,6 +10,13 @@ class Obstacle:
         self.rows_size = rows_size
         self.columns_size = columns_size
         self.uid = uid
+        self.has_a_hit = False
+
+    def get_has_a_hit(self):
+        return self.has_a_hit
+
+    def set_has_a_hit(self):
+        self.has_a_hit = True
 
     def get_uid(self):
         return self.uid
