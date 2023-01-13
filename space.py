@@ -26,6 +26,10 @@ def start_game_engine(canvas, frames, stars_qty=200):
     median_x = int(max_x / 2)
     column = median_x
     row = median_y
+    derwin = canvas.derwin(3, 30, max_y-3, max_x - 45)
+    derwin.border()
+
+    derwin.refresh()
 
     for _ in range(stars_qty):
         coroutines.append(
