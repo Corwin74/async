@@ -1,5 +1,6 @@
 import curses
-from curses_tools import draw_frame, get_frame_size, sleep
+from curses_tools import draw_frame, get_frame_size
+from asyncio_tools import sleep
 
 
 GAME_OVER_FRAME = """
@@ -8,16 +9,14 @@ GAME_OVER_FRAME = """
 |  |  __     /  ^  \    |  \  /  | |  |__      |  |  |  |  \   \/   /  |  |__   |  |_)  |    
 |  | |_ |   /  /_\  \   |  |\/|  | |   __|     |  |  |  |   \      /   |   __|  |      /     
 |  |__| |  /  _____  \  |  |  |  | |  |____    |  `--'  |    \    /    |  |____ |  |\  \----.
- \______| /__/     \__\ |__|  |__| |_______|    \______/      \__/     |_______|| _| `._____|
-                                                                                             
-"""
+ \______| /__/     \__\ |__|  |__| |_______|    \______/      \__/     |_______|| _| `._____|"""
 
 
 async def show_end_title(canvas):
     max_y, max_x = canvas.getmaxyx()
     title_height, title_width = get_frame_size(GAME_OVER_FRAME)
-    row = (max_y - title_width)
-    column = (max_x - title_height)
+    row = (max_y - title_height) / 2
+    column = (max_x - title_width) / 2
     while True:
         draw_frame(canvas, row, column, GAME_OVER_FRAME, style=curses.A_DIM)
         await sleep(20)

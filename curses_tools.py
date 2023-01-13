@@ -1,5 +1,4 @@
 import curses
-import asyncio
 
 
 SPACE_KEY_CODE = 32
@@ -79,8 +78,3 @@ def get_frame_size(text):
     rows = len(lines)
     columns = max([len(line) for line in lines])
     return rows, columns
-
-
-async def sleep(tics=1):
-    for _ in range(tics):
-        await asyncio.sleep(0)
