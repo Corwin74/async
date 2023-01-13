@@ -4,9 +4,9 @@ import logging
 import random
 
 import os
-from asyncio_tools import coroutines
+import asyncio_tools
 from space_garbage import fill_orbit_with_garbage
-from stars_and_ship import animate_spaceship, blink
+from stars_and_ship import animate_spaceship, blink, display_info, update_year
 from obstacles_tools import show_obstacles
 
 TIC_TIMEOUT = 0.1
@@ -26,13 +26,10 @@ def start_game_engine(canvas, frames, stars_qty=200):
     median_x = int(max_x / 2)
     column = median_x
     row = median_y
-    derwin = canvas.derwin(3, 30, max_y-3, max_x - 45)
-    derwin.border()
-
-    derwin.refresh()
+    derwin = canvas.derwin(3, 50, max_y-3, max_x - 70)
 
     for _ in range(stars_qty):
-        coroutines.append(
+        asyncio_tools.coroutines.append(
             blink(
                 canvas, random.randint(1, max_y - 1),
                 random.randint(1, max_x - 1),
@@ -40,16 +37,18 @@ def start_game_engine(canvas, frames, stars_qty=200):
                 symbol=random.choice(['*', ':', '+', '.'])
             )
         )
-    coroutines.append(fill_orbit_with_garbage(canvas, frames))
-    coroutines.append(show_obstacles(canvas))
-    coroutines.append(animate_spaceship(canvas, row, column, frames))
+    asyncio_tools.coroutines.append(fill_orbit_with_garbage(canvas, frames))
+    asyncio_tools.coroutines.append(show_obstacles(canvas))
+    asyncio_tools.coroutines.append(animate_spaceship(canvas, row, column, frames))
+    asyncio_tools.coroutines.append(update_year())
+    asyncio_tools.coroutines.append(display_info(derwin))
 
     while True:
-        for coroutine in coroutines.copy():
+        for coroutine in asyncio_tools.coroutines.copy():
             try:
                 coroutine.send(None)
             except StopIteration:
-                coroutines.remove(coroutine)
+                asyncio_tools.coroutines.remove(coroutine)
         canvas.border()
         canvas.refresh()
         time.sleep(TIC_TIMEOUT)
