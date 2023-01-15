@@ -1,7 +1,8 @@
 import asyncio
 
 coroutines = []
-year_xxx = 1957
+year = 1957
+game_is_over = False
 
 
 async def sleep(tics=1):

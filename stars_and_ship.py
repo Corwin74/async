@@ -53,7 +53,7 @@ async def animate_spaceship(canvas, row, column, frames):
     for frame in cycle(['rocket_frame_1', 'rocket_frame_2']):
         rows_direction, columns_direction, space_pressed =\
             read_controls(canvas)
-        if space_pressed:
+        if space_pressed and asyncio_tools.year >= 2020:
             asyncio_tools.coroutines.append(fire(canvas, row, column + 2, -1))
         if columns_direction > 0:
             row_speed, column_speed = \
@@ -82,6 +82,7 @@ async def animate_spaceship(canvas, row, column, frames):
                 obstacle.set_has_a_hit()
                 obstacle.set_collision_coordinates(row, column)
                 asyncio_tools.coroutines.append(show_end_title(canvas))
+                asyncio_tools.game_is_over = True
                 return
         draw_frame(canvas, row, column, frames[frame])
         await asyncio_tools.sleep(1)
@@ -115,20 +116,22 @@ async def blink(
             state = 1
 
 
-async def display_info(canvas):
+async def print_game_messages(canvas):
 
     while True:
         canvas.border()
         canvas.clear()
-        canvas.addstr(1, 1, str(asyncio_tools.year_xxx))
-        if PHRASES.get(asyncio_tools.year_xxx):
-            canvas.addstr(1, 1, str(asyncio_tools.year_xxx) +' ---> ' + PHRASES.get(asyncio_tools.year_xxx))
+        canvas.addstr(1, 1, str(asyncio_tools.year))
+        if PHRASES.get(asyncio_tools.year):
+            canvas.addstr(1, 1, str(asyncio_tools.year) + ' ---> ' +
+                          PHRASES.get(asyncio_tools.year))
         canvas.refresh()
         await asyncio_tools.sleep(1)
 
 
-async def update_year():
+async def update_year_counter():
     while True:
         for _ in range(15):
             await asyncio_tools.sleep(1)
-        asyncio_tools.year_xxx += 1
+        if not asyncio_tools.game_is_over:
+            asyncio_tools.year += 1

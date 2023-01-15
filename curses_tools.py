@@ -39,8 +39,16 @@ def read_controls(canvas):
     return rows_direction, columns_direction, space_pressed
 
 
-def draw_frame(canvas, start_row, start_column, text, negative=False, style=curses.A_NORMAL):
-    """Draw multiline text fragment on canvas, erase text instead of drawing if negative=True is specified."""
+def draw_frame(
+    canvas,
+    start_row,
+    start_column,
+    text,
+    negative=False,
+    style=curses.A_NORMAL
+):
+    """Draw multiline text fragment on canvas, erase text instead of drawing
+    if negative=True is specified."""
 
     rows_number, columns_number = canvas.getmaxyx()
 
@@ -61,7 +69,8 @@ def draw_frame(canvas, start_row, start_column, text, negative=False, style=curs
             if symbol == ' ':
                 continue
 
-            # Check that current position it is not in a lower right corner of the window
+            # Check that current position it is not in a lower right corner
+            # of the window
             # Curses will raise exception in that case. Don`t ask why…
             # https://docs.python.org/3/library/curses.html#curses.window.addch
             if row == rows_number - 1 and column == columns_number - 1:
@@ -72,7 +81,8 @@ def draw_frame(canvas, start_row, start_column, text, negative=False, style=curs
 
 
 def get_frame_size(text):
-    """Calculate size of multiline text fragment, return pair — number of rows and columns."""
+    """Calculate size of multiline text fragment, \
+        return pair — number of rows and columns."""
 
     lines = text.splitlines()
     rows = len(lines)
