@@ -119,12 +119,12 @@ async def blink(
 async def print_game_messages(canvas):
 
     while True:
-        canvas.border()
         canvas.clear()
-        canvas.addstr(1, 1, str(asyncio_tools.year))
         if PHRASES.get(asyncio_tools.year):
             canvas.addstr(1, 1, str(asyncio_tools.year) + ' ---> ' +
                           PHRASES.get(asyncio_tools.year))
+        else:
+            canvas.addstr(1, 1, str(asyncio_tools.year))
         canvas.refresh()
         await asyncio_tools.sleep(1)
 

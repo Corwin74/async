@@ -11,6 +11,7 @@ from stars_and_ship import animate_spaceship, blink, print_game_messages,\
 from obstacles_tools import show_obstacles
 
 TIC_TIMEOUT = 0.1
+DEBUG = False
 
 
 def start_game_engine(canvas, frames, stars_qty=200):
@@ -27,7 +28,7 @@ def start_game_engine(canvas, frames, stars_qty=200):
     median_x = int(max_x / 2)
     column = median_x
     row = median_y
-    derwin = canvas.derwin(2, 50, max_y-2, max_x - 50)
+    derwin = canvas.derwin(2, 55, max_y-2, max_x - 55)
 
     for _ in range(stars_qty):
         asyncio_tools.coroutines.append(
@@ -39,7 +40,8 @@ def start_game_engine(canvas, frames, stars_qty=200):
             )
         )
     asyncio_tools.coroutines.append(fill_orbit_with_garbage(canvas, frames))
-    asyncio_tools.coroutines.append(show_obstacles(canvas))
+    if DEBUG:
+        asyncio_tools.coroutines.append(show_obstacles(canvas))
     asyncio_tools.coroutines.append(
         animate_spaceship(canvas, row, column, frames)
     )

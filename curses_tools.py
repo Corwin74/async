@@ -1,6 +1,5 @@
 import curses
 
-
 SPACE_KEY_CODE = 32
 LEFT_KEY_CODE = 260
 RIGHT_KEY_CODE = 261
