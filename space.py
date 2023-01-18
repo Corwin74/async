@@ -59,12 +59,12 @@ def start_game_engine(canvas, frames, stars_qty=200):
         time.sleep(TIC_TIMEOUT)
 
 
-def load_frames_data(path):
-    files = os.listdir(path=path)
+def load_frames(path):
+    filenames = os.listdir(path=path)
     frames = {}
-    for file in files:
-        with open(f'{path}{file}', "r", encoding='utf-8') as f:
-            frames[file.split('.')[0]] = f.read()
+    for filename in filenames:
+        with open(f'{path}{filename}', "r", encoding='utf-8') as f:
+            frames[filename.split('.')[0]] = f.read()
     return frames
 
 
@@ -75,7 +75,7 @@ def main():
             level=logging.INFO,
             filename='space.log',
     )
-    frames = load_frames_data('frames/')
+    frames = load_frames('frames/')
     curses.update_lines_cols()
     logger.info('Game start')
     curses.wrapper(start_game_engine, frames)
