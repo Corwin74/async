@@ -1,5 +1,6 @@
 import uuid
 import random
+import settings
 from obstacles_tools import obstacles, Obstacle
 from curses_tools import draw_frame, get_frame_size
 import asyncio_tools
@@ -14,12 +15,14 @@ async def fill_orbit_with_garbage(canvas, frames):
     garbage_keys.remove('rocket_frame_2')
     _, max_x = canvas.getmaxyx()
     while True:
-        if not asyncio_tools.game_is_over and get_garbage_delay_tics(
-                                                asyncio_tools.year
-                                              ):
+        tics = get_garbage_delay_tics(settings.year)
+        if not settings.game_is_over and tics:
             garbage = random.choice(garbage_keys)
             garbage_height, garbage_width = get_frame_size(frames[garbage])
-            garbage_column = random.randint(1, max_x - garbage_width - 1)
+            garbage_column = random.randint(
+                settings.BORDER_WIDTH,
+                max_x - garbage_width - settings.BORDER_WIDTH
+            )
             garbage_uid = uuid.uuid4()
             asyncio_tools.coroutines.append(
                 fly_garbage(
@@ -30,13 +33,13 @@ async def fill_orbit_with_garbage(canvas, frames):
                 )
             )
             obstacles[garbage_uid] = Obstacle(
-                1,
+                settings.BORDER_WIDTH,
                 garbage_column,
                 garbage_height,
                 garbage_width,
                 uid=garbage_uid)
             await asyncio_tools.sleep(
-                get_garbage_delay_tics(asyncio_tools.year)
+                get_garbage_delay_tics(settings.year)
             )
         else:
             await asyncio_tools.sleep(1)
@@ -49,7 +52,7 @@ async def fly_garbage(canvas, column, garbage_frame, garbage_uid, speed=0.5):
     rows_number, columns_number = canvas.getmaxyx()
 
     column = max(column, 0)
-    column = min(column, columns_number - 1)
+    column = min(column, columns_number - settings.BORDER_WIDTH)
 
     row = 0
 

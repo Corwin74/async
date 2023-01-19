@@ -4,6 +4,7 @@ import logging
 import random
 import os
 
+import settings
 import asyncio_tools
 from space_garbage import fill_orbit_with_garbage
 from stars_and_ship import animate_spaceship, blink, print_game_messages,\
@@ -22,8 +23,8 @@ def start_game_engine(canvas, frames, stars_qty=200):
     max_y, max_x = canvas.getmaxyx()
     # Function return a tuple (y, x) of the height and width of the window.
     # Not a maximum of coordinates. So adjust it.
-    max_x -= 1
-    max_y -= 1
+    max_x -= settings.BORDER_WIDTH
+    max_y -= settings.BORDER_WIDTH
     median_y = int(max_y / 2)
     median_x = int(max_x / 2)
     column = median_x
@@ -33,8 +34,11 @@ def start_game_engine(canvas, frames, stars_qty=200):
     for _ in range(stars_qty):
         asyncio_tools.coroutines.append(
             blink(
-                canvas, random.randint(1, max_y - 1),
-                random.randint(1, max_x - 1),
+                canvas, random.randint(
+                    settings.BORDER_WIDTH,
+                    max_y - settings.BORDER_WIDTH
+                ),
+                random.randint(1, max_x - settings.BORDER_WIDTH),
                 random.randint(1, 4),
                 symbol=random.choice(['*', ':', '+', '.'])
             )

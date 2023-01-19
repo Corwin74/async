@@ -1,6 +1,7 @@
 import curses
 from itertools import cycle
 import asyncio_tools
+import settings
 from obstacles_tools import obstacles
 from curses_tools import get_frame_size, draw_frame, read_controls
 from game_over import show_end_title
@@ -53,7 +54,7 @@ async def animate_spaceship(canvas, row, column, frames):
     for frame in cycle(['rocket_frame_1', 'rocket_frame_2']):
         rows_direction, columns_direction, space_pressed =\
             read_controls(canvas)
-        if space_pressed and asyncio_tools.year >= 2020:
+        if space_pressed and settings.year >= 2020:
             asyncio_tools.coroutines.append(fire(canvas, row, column + 2, -1))
         if columns_direction > 0:
             row_speed, column_speed = \
@@ -73,16 +74,16 @@ async def animate_spaceship(canvas, row, column, frames):
 
         row, column = row + row_speed, column + column_speed
         column = min(max_x - rocket_width, column)
-        column = max(1, column)
+        column = max(settings.BORDER_WIDTH, column)
         row = min(max_y - rocket_height, row)
-        row = max(1, row)
+        row = max(settings.BORDER_WIDTH, row)
 
         for obstacle in list(obstacles.values()):
             if obstacle.has_collision(row, column):
                 obstacle.set_has_a_hit()
                 obstacle.set_collision_coordinates(row, column)
                 asyncio_tools.coroutines.append(show_end_title(canvas))
-                asyncio_tools.game_is_over = True
+                settings.game_is_over = True
                 return
         draw_frame(canvas, row, column, frames[frame])
         await asyncio_tools.sleep(1)
@@ -120,11 +121,11 @@ async def print_game_messages(canvas):
 
     while True:
         canvas.clear()
-        if PHRASES.get(asyncio_tools.year):
-            canvas.addstr(1, 1, str(asyncio_tools.year) + ' ---> ' +
-                          PHRASES.get(asyncio_tools.year))
+        if PHRASES.get(settings.year):
+            canvas.addstr(1, 1, str(settings.year) + ' ---> ' +
+                          PHRASES.get(settings.year))
         else:
-            canvas.addstr(1, 1, str(asyncio_tools.year))
+            canvas.addstr(1, 1, str(settings.year))
         canvas.refresh()
         await asyncio_tools.sleep(1)
 
@@ -133,5 +134,5 @@ async def update_year_counter():
     while True:
         for _ in range(15):
             await asyncio_tools.sleep(1)
-        if not asyncio_tools.game_is_over:
-            asyncio_tools.year += 1
+        if not settings.game_is_over:
+            settings.year += 1
